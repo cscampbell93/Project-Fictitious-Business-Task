@@ -1,30 +1,82 @@
 ---
 title: "Cyclistic Ride Times"
 author: "C Campbell"
-date: "17/04/2024"
+date: "13/04/2024"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+### Business Task
+
+The purpose of this report is to document the relationship between annual members and casual riders, identify any trends and to conjure some recommendations for the marketing team to possibly convert casual riders into annual members based on the findings of the data.
+
+The raw data sources used for this was a consolidated dataset of the total riders from the 2019 Q1 & 2020 Q1 datasets.
+
+### Cleaning Steps
+
+While working with the data, I documented the cleaning steps involved before beginning any analysis. The cleaning was completed in an Excel document before being uploaded to RStudio as a .csv file. These steps included:
+
+* Standardised headings for "usertype" and "ride_id" between the datasets.
+
+* Adjusted the "Subscriber" and "Customer" to match the corresponding dataset "member" and "casual" using the Find and Replace function.
+
+* Used "Remove Duplicates" function under the Data tab to check for any duplicates within the ride_id column. There were none.
+
+* Removed instances that returned ride_length as less than 0 seconds.
+
+* Removed irrelevant columns such as gender and birth year etc.
+
+* As some of the sample data exceeded into multiple days, this was messing with formulas of the dataset. For consistency and still maintaining a large sample size I removed all ride_length to less than 24 hours. This will still be an ample size to compare "casual" and "member" users.
+
+### Findings
+
+Once the data was cleaned and uploaded to RStudio, I was able to produce the following graph:
+
+$~$ <!-- symbols add one line of white space between segments -->
+
+```{r, include=FALSE}
+library("tidyverse") # To load the read and pipe functions for the following ggplot to run
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+cyclistic_ds <- read_csv("Divvy_Trips_2020_Q1 - Consolidated - Trimmed Sample3.csv")
+cyclistic_ds %>%
+  mutate(weekday = wday(started_at, label = TRUE)) %>%
+  group_by(usertype, weekday) %>%
+  summarise(number_of_rides = n()
+            ,average_duration = mean(ride_length/60)) %>%
+  arrange(usertype, weekday) %>%
+  ggplot(aes(x = weekday, y = average_duration, fill = usertype)) +
+  geom_col(position = "dodge") +
+  labs(title = "Average Ride Times: Casual vs. Member",
+       caption = "Data Sources: 2019 Q1 & 2020 Q1",
+       fill = "Usertype",
+       x = "Weekday",
+       y = "Average Duration (mins)") +
+  scale_fill_hue(labels = c("Casual", "Member")) +
+  annotate("text", x = 6.3, y= 40, label = "Casual riders ride at least 3x
+longer than members", color = "cadetblue4", fontface = 2, size = 3.5)
 ```
 
-## Including Plots
+<!-- symbols add one line of white space between segments -->
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+As you can see there is an exceptional variation of ride times between members and casual riders; casual riders having on average of more than 3 times the ride duration than members on any day of the week.
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Important Takeaways
+
+* The limited datasets focus solely on the months of January to March and do not account for the rest of the year.
+
+* Members are possibly most likely to be commuting to their work, resulting in a more consistent trend of ride times.
+
+* Casual riders have more sporadic variation throughout the week and for much longer periods as they are, possibly, most likely riding for pleasure as opposed to commuting.
+
+### Recommendations
+
+Top 3 recommendations, based on the analysis, to attempt to convert casual riders into annual members:
+
+* Targeted/personalised advertisements to casual riders, specifically highlighting the savings they could make on their long rides by becoming a member.
+
+* A free trial for casual members for a practical example of the savings they could make being on an annual membership’s vs single-ride/full-day passes.
+
+* A notification at the end of each ride indicating the money that could have been saved if they were on an annual membership plan.
